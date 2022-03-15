@@ -30,7 +30,7 @@ class ZedCamera(object):
         rospy.init_node('zed_ros', anonymous=True)
         
         # Initialize joy message subscribers
-        rospy.Subscriber('/joy', Joy, self.handleJoyMessage, queue_size=3, buff_size=2**16)
+        rospy.Subscriber('/joy', Joy, self.handle_joy_message, queue_size=3, buff_size=2**16)
 
     def handle_joy_message(self, joy_msg):
 
@@ -39,10 +39,10 @@ class ZedCamera(object):
             image = sl.Mat()
             runtime_parameters = sl.RuntimeParameters()
 
-            if zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
+            if self.zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
                 # Get image and time stamp
-                zed.retrieve_image(image, sl.VIEW.LEFT)
-                timestamp = zed.get_timestamp(sl.TIME_REFERENCE.CURRENT)
+                self.zed.retrieve_image(image, sl.VIEW.LEFT)
+                timestamp = self.zed.get_timestamp(sl.TIME_REFERENCE.CURRENT)
                 image_cv = image.get_data()
                 file_name = f"zed_image_left_{timestamp}.jpg"
 
@@ -71,7 +71,7 @@ class ZedCamera(object):
 
         # Open the camera
         if zed.open(init_params) != sl.ERROR_CODE.SUCCESS:
-            rospy.loginfo(f"Zed cam failed to initialize: {err}")
+            rospy.loginfo("Zed cam failed to initialize")
         else:
             return zed;
 
