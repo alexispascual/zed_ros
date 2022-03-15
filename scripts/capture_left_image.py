@@ -21,7 +21,6 @@ class ZedCamera(object):
         self.zed = None
 
         # Initialize save directory
-        rospy.loginfo()
         self.save_directory = os.path.join(os.getcwd(), "images")
 
         if not os.path.isdir(self.save_directory):
