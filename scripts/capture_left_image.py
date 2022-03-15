@@ -31,7 +31,7 @@ class ZedCamera(object):
         rospy.init_node('zed_ros', anonymous=True)
         
         # Initialize joy message subscribers
-        rospy.Subscriber('/joy', Joy, self.handle_joy_message, queue_size=3, buff_size=2**16)
+        rospy.Subscriber('/joy_teleop/joy', Joy, self.handle_joy_message, queue_size=3, buff_size=2**16)
 
     def handle_joy_message(self, joy_msg):
 
