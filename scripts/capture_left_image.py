@@ -81,4 +81,5 @@ class ZedCamera(object):
         rospy.spin()
 
 if __name__ == '__main__':
-    zed
+    zed = ZedCamera()
+    zed.start()
