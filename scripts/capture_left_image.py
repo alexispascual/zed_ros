@@ -49,7 +49,7 @@ class ZedCamera(object):
                 # Save image
                 cv2.imwrite(os.path.join(self.save_directory, file_name), image_cv)
 
-        else if joy_msg.buttons[self.initialize_camera_button]:
+        elif joy_msg.buttons[self.initialize_camera_button]:
             # Toggle camera
             if not self.zed:
                 self.zed = self.initialize_camera()
