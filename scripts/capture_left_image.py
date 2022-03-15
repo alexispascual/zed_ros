@@ -21,9 +21,11 @@ class ZedCamera(object):
         self.zed = None
 
         # Initialize save directory
-        self.save_directory = os.path.abspath("~/Documents/Zed Images")
+        rospy.loginfo()
+        self.save_directory = os.path.join(os.getcwd(), "images")
 
         if not os.path.isdir(self.save_directory):
+            rospy.loginfo("Creating save Directory")
             os.makedirs(self.save_directory)
 
         # Initialize zed_ros node
@@ -78,6 +80,7 @@ class ZedCamera(object):
 
     def start(self):
         # Keeps python from exiting until node is stopped
+        rospy.loginfo("Starting Zed Camera Node...")
         rospy.spin()
 
 if __name__ == '__main__':
