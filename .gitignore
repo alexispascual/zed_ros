@@ -53,3 +53,6 @@ CATKIN_IGNORE
 # Spyder files
 .pylint.d/
 .spyproject/
+
+# Zed Cam Images
+images/
