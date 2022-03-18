@@ -46,6 +46,8 @@ class ZedCamera(object):
             self.toggle_camera()
             
     def capture_depth_map(self):
+        rospy.loginfo("Capturing depth map/image pair...")
+        
         # Initialize depth map and image objects
         depth = sl.Mat()
         image = sl.Mat()
@@ -58,11 +60,14 @@ class ZedCamera(object):
         runtime_parameters.textureness_confidence_threshold = 100
         
         if self.zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
+            rospy.loginfo("Grabbed runtime params...")
             
             # Take image and matching depth map
+            rospy.loginfo("Got image!")
             self.zed.retrieve_image(image, sl.VIEW.LEFT)
             
             # Retrieve depth map. Depth is aligned on the left image
+            rospy.loginfo("Got depth map!")
             self.zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
             
             # Get time stamp for file name
@@ -73,6 +78,7 @@ class ZedCamera(object):
             image_data = image.get_data()
             
             # Save data
+            rospy.loginfo("Saving data...")
             self.save_data(self, image_data, depth_data, timestamp)
             
     def stream_video(self):
@@ -104,6 +110,8 @@ class ZedCamera(object):
         # Save depth map
         file_name = f"depth_map_{timestamp}.npy"
         np.save(file_name, depth_data)
+        
+        rospy.loginfo("Data saved!")
         
     def toggle_camera(self):
         
