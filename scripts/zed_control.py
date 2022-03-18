@@ -47,6 +47,22 @@ class ZedCamera(object):
             self.toggle_camera()
             
     def capture_depth_map(self):
+        
+        # Create a Camera object
+        zed = sl.Camera()
+
+        # Create a InitParameters object and set configuration parameters
+        init_params = sl.InitParameters()
+        init_params.depth_mode = sl.DEPTH_MODE.PERFORMANCE  # Use PERFORMANCE depth mode
+        init_params.coordinate_units = sl.UNIT.METER  # Use meter units (for depth measurements)
+        init_params.camera_resolution = sl.RESOLUTION.HD1080  # Use HD1080 video mode
+        init_params.camera_fps = 30  # Set fps at 30
+        
+        if zed.open(init_params) != sl.ERROR_CODE.SUCCESS:
+            rospy.loginfo("Zed cam failed to initialize")
+        else:        
+            rospy.loginfo("Camera initialized!")
+            
         rospy.loginfo("Capturing depth map/image pair...")
         
         # Initialize depth map and image objects
@@ -63,19 +79,19 @@ class ZedCamera(object):
         runtime_parameters.confidence_threshold = 90
         runtime_parameters.textureness_confidence_threshold = 90
         
-        if self.zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
+        if zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
             rospy.loginfo("Grabbed runtime params...")
             
             # Take image and matching depth map
             rospy.loginfo("Got image!")
-            self.zed.retrieve_image(image, sl.VIEW.LEFT)
+            zed.retrieve_image(image, sl.VIEW.LEFT)
             
             # Retrieve depth map. Depth is aligned on the left image
             rospy.loginfo("Got depth map!")
-            self.zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
+            zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
             
             # Get time stamp for file name
-            timestamp = self.zed.get_timestamp(sl.TIME_REFERENCE.CURRENT)
+            timestamp = zed.get_timestamp(sl.TIME_REFERENCE.CURRENT)
             
             # Get Depth data and save to file
             depth_data = depth.get_data()
@@ -84,6 +100,8 @@ class ZedCamera(object):
             # Save data
             rospy.loginfo("Saving data...")
             self.save_data(self, image_data, depth_data, timestamp)
+            
+        zed.close()
             
     def stream_video(self):
         # Capture and save image
