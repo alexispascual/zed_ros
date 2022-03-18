@@ -40,7 +40,8 @@ class ZedCamera(object):
     def handle_joy_message(self, joy_msg):
         # Massive if statement to handle joy mesages
         if joy_msg.buttons[self.capture_depth_map_button]:
-           self.capture_depth_map()
+            rospy.loginfo("Wtf")
+            self.capture_depth_map()
 
         elif joy_msg.buttons[self.toggle_camera_button]:
             self.toggle_camera()
