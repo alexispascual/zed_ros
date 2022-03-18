@@ -73,11 +73,11 @@ class ZedCamera(object):
         # Create and set RuntimeParameters after opening the camera
         rospy.loginfo("Setting runtime params")
         runtime_parameters = sl.RuntimeParameters()
-        runtime_parameters.sensing_mode = sl.SENSING_MODE.STANDARD  # Use STANDARD sensing mode
+        # runtime_parameters.sensing_mode = sl.SENSING_MODE.STANDARD  # Use STANDARD sensing mode
         
         # Setting the depth confidence parameters
-        runtime_parameters.confidence_threshold = 90
-        runtime_parameters.textureness_confidence_threshold = 90
+        # runtime_parameters.confidence_threshold = 90
+        # runtime_parameters.textureness_confidence_threshold = 90
         
         if zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
             rospy.loginfo("Grabbed runtime params...")
