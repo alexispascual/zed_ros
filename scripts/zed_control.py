@@ -40,7 +40,6 @@ class ZedCamera(object):
     def handle_joy_message(self, joy_msg):
         # Massive if statement to handle joy mesages
         if joy_msg.buttons[self.capture_depth_map_button]:
-            rospy.loginfo("Wtf")
             self.capture_depth_map()
 
         elif joy_msg.buttons[self.toggle_camera_button]:
@@ -56,7 +55,7 @@ class ZedCamera(object):
         init_params.depth_mode = sl.DEPTH_MODE.PERFORMANCE  # Use PERFORMANCE depth mode
         init_params.coordinate_units = sl.UNIT.METER  # Use meter units (for depth measurements)
         init_params.camera_resolution = sl.RESOLUTION.HD1080  # Use HD1080 video mode
-        init_params.camera_fps = 30  # Set fps at 30
+        # init_params.camera_fps = 30  # Set fps at 30
         
         if zed.open(init_params) != sl.ERROR_CODE.SUCCESS:
             rospy.loginfo("Zed cam failed to initialize")
