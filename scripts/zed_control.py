@@ -25,6 +25,7 @@ class ZedCamera(object):
         self.init_params = None
 
         # Initialize variables
+        self.capture_depth_map = False
         self.continuous_capture = False
 
         # Initialize save directory
@@ -44,14 +45,17 @@ class ZedCamera(object):
         self.initialize_parameters()
 
         # Define sleep rate
-        self.rate = rospy.Rate(1)
+        self.rate = rospy.Rate(10)
         
     def handle_joy_message(self, joy_msg):
         # Massive if statement to handle joy mesages
         if joy_msg.buttons[self.capture_depth_map_button]:
-            self.capture_depth_map()
+            self.capture_depth_map ^= True
+            rospy.sleep(1.)
         elif joy_msg.buttons[self.capture_depth_video_button]:
-            self.toggle_continuous_capture()
+            self.continuous_capture ^= True
+            rospy.loginfo(f"Continuous capture: {self.continuous_capture}")
+            rospy.sleep(1.)
         elif joy_msg.buttons[self.toggle_camera_button]:
             self.toggle_camera()
     
@@ -90,29 +94,6 @@ class ZedCamera(object):
             else:
                 rospy.loginfo(f"Error grabbing frame: {err}")    
                 self.toggle_camera()
-
-    def capture_depth_map(self):
-        
-        if not self.zed:
-            rospy.loginfo("Initialize Camera First!")
-        else:
-            rospy.loginfo("Capturing depth map/image pair...")
-            
-            # Initialize depth map, image, and point cloud objects
-            rospy.loginfo("Initializing depth/image objects")
-            image_mat = sl.Mat()
-            depth_mat = sl.Mat()
-            point_cloud_mat = sl.Mat()
-
-            # Prepare for distance calculation
-            mirror_ref = sl.Transform()
-            mirror_ref.set_translation(sl.Translation(2.75,4.0,0))
-            tr_np = mirror_ref.m
-
-            self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np)
-
-            if self.continuous_capture:
-                self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np)
 
     def stream_video(self):
         # Capture and save image
@@ -204,7 +185,33 @@ class ZedCamera(object):
     def start(self):
         # Keeps python from exiting until node is stopped
         rospy.loginfo("Starting Zed Camera Node...")
-        rospy.spin()
+
+        # Initialize depth map, image, and point cloud objects
+        rospy.loginfo("Initializing depth/image objects")
+        image_mat = sl.Mat()
+        depth_mat = sl.Mat()
+        point_cloud_mat = sl.Mat()
+
+        # Prepare for distance calculation
+        mirror_ref = sl.Transform()
+        mirror_ref.set_translation(sl.Translation(2.75,4.0,0))
+        tr_np = mirror_ref.m
+
+        while not rospy.is_shutdown():
+
+            if self.capture_depth_map:
+                if not self.zed:
+                    rospy.loginfo("Initialize Camera First!")
+                else:
+                    rospy.loginfo("Capturing depth map/image pair...")
+                    self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np)
+                    self.capture_depth_map = False
+
+            elif self.continuous_capture:
+                rospy.loginfo("Capturing depth map/image pair...")
+                self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np)
+
+            self.rate.sleep()
 
 if __name__ == '__main__':
     zed = ZedCamera()
