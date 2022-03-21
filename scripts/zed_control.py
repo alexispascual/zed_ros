@@ -46,7 +46,7 @@ class ZedCamera(object):
         rospy.Subscriber('/joy_teleop/joy', Joy, self.handle_joy_message, queue_size=3, buff_size=2**16)
 
         # Initialize stream publisher
-        self.image_publisher = rospy.Publisher('/zed_left_camera', Float64MultiArray, queue_size=10)
+        self.image_publisher = rospy.Publisher('/zed_left_camera', UInt8MultiArray, queue_size=10)
 
         # Initialize params
         self.initialize_parameters()
@@ -121,7 +121,7 @@ class ZedCamera(object):
         # Publish image
         # image = image_data.flatten().astype(np.uint8)
 
-        img_msg = Float64MultiArray()
+        img_msg = UInt8MultiArray()
         image_data = tuple(map(tuple, image_data))
         img_msg.data = image_data
 
