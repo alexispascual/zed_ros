@@ -155,7 +155,7 @@ class ZedCamera(object):
             
             self.zed.close()
             self.zed = None
-            
+
             rospy.loginfo("Camera closed!")
 
     def initialize_parameters(self):
@@ -165,8 +165,8 @@ class ZedCamera(object):
         self.init_params = sl.InitParameters()
         self.init_params.depth_mode = sl.DEPTH_MODE.QUALITY  # Use PERFORMANCE depth mode
         self.init_params.coordinate_units = sl.UNIT.METER  # Use meter units (for depth measurements)
-        self.init_params.camera_resolution = sl.RESOLUTION.HD2K  # Use HD1080 video mode
-        self.init_params.camera_fps = 15  # Set fps at 30
+        self.init_params.camera_resolution = sl.RESOLUTION.HD1080  # Use HD1080 video mode
+        self.init_params.camera_fps = 30  # Set fps at 30
 
         # Create and set RuntimeParameters after opening the camera
         self.runtime_parameters = sl.RuntimeParameters()
