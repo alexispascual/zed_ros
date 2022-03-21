@@ -51,7 +51,9 @@ class ZedCamera(object):
         if joy_msg.buttons[self.capture_depth_map_button]:
             self.capture_depth_map()
         elif joy_msg.buttons[self.capture_depth_video_button]:
-            self.toggle_continuous_capture()
+            self.continuous_capture ^= True
+            rospy.loginfo(f"Continuous capture: {self.continuous_capture}")
+            rospy.sleep(1.)
         elif joy_msg.buttons[self.toggle_camera_button]:
             self.toggle_camera()
             
