@@ -6,7 +6,8 @@ import cv2
 import pyzed.sl as sl
 import numpy as np
 
-from sensor_msgs.msg import Joy
+from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import Joy, Image
 
 class ZedCamera(object):
     """docstring for ZedCamera"""
@@ -27,6 +28,7 @@ class ZedCamera(object):
         # Initialize variables
         self.capture_depth_map = False
         self.continuous_capture = False
+        self.stream_video = False
 
         # Initialize save directory
         self.save_directory = os.path.join(os.getcwd(), "data")
@@ -36,16 +38,22 @@ class ZedCamera(object):
             os.makedirs(self.save_directory)
 
         # Initialize zed_ros node
-        rospy.init_node('zed_ros', anonymous=True)
+        rospy.init_node('zed_ros', anonymous=False)
         
         # Initialize joy message subscribers
         rospy.Subscriber('/joy_teleop/joy', Joy, self.handle_joy_message, queue_size=3, buff_size=2**16)
+
+        # Initialize stream publisher
+        self.image_publisher = rospy.Publisher('/zed_left_camera', Image, queue_size=10)
 
         # Initialize params
         self.initialize_parameters()
 
         # Define sleep rate
         self.rate = rospy.Rate(10)
+
+        # Initialize CvBridge
+        self.bridge = CvBridge()
         
     def handle_joy_message(self, joy_msg):
         # Massive if statement to handle joy mesages
@@ -63,7 +71,9 @@ class ZedCamera(object):
                 self.continuous_capture ^= True
                 
             rospy.loginfo(f"Continuous capture: {self.continuous_capture}")
-            
+        elif joy_msg.buttons[self.stream_video_button]:
+            self.stream_video ^= True
+            rospy.sleep(1.)
         elif joy_msg.buttons[self.toggle_camera_button]:
             self.toggle_camera()
     
@@ -95,6 +105,9 @@ class ZedCamera(object):
                 point_cloud_data = point_cloud_mat.get_data()
                 point_cloud_data.dot(mirror_mat)
 
+                if self.stream_video:
+                    self.publish_image_message(image_data)
+
                 # Save data
                 rospy.loginfo("Saving data...")
                 self.save_data(image_data, depth_data, point_cloud_data, timestamp)
@@ -103,7 +116,14 @@ class ZedCamera(object):
                 rospy.loginfo(f"Error grabbing frame: {err}")    
                 self.toggle_camera()
 
-    def stream_video(self):
+    def publish_image_message(self, image_data):
+        # Create Image message
+        image_message = self.bridge.cv2_to_imgmsg(image_data, "bgra8")
+
+        # Publish image
+        self.image_publisher.publish(image_message)
+
+    def publish_video(self):
         # Capture and save image
         image = sl.Mat()
         runtime_parameters = sl.RuntimeParameters()
@@ -111,15 +131,12 @@ class ZedCamera(object):
         if self.zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:   
             # Get image and time stamp
             self.zed.retrieve_image(image, sl.VIEW.LEFT)
-            timestamp = self.zed.get_timestamp(sl.TIME_REFERENCE.CURRENT)
             
-            # Get Image data and save to file
+            # Get Image data
             image_data = image.get_data()
             
-            # TODO: Publish image data
-
-            # Save image
-            cv2.imwrite(os.path.join(self.save_directory, file_name), image_data)
+            # Publish image data
+            self.publish_image_message(image_data)
 
     def save_data(self, image_data, depth_data, point_cloud_data, timestamp):
         # Create folder for depth map/image pair
@@ -218,6 +235,13 @@ class ZedCamera(object):
             elif self.continuous_capture:
                 rospy.loginfo("Capturing depth map/image pair...")
                 self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np)
+
+            if self.stream_video:
+                if not self.zed:
+                    rospy.loginfo("Initialize Camera First!")
+                else:
+                    self.publish_video()
+                
 
             self.rate.sleep()
 
