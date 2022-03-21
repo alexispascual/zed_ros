@@ -8,6 +8,7 @@ project(zed_ros)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
   rospy
   std_msgs
 )
@@ -104,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES zed_ros
-#  CATKIN_DEPENDS rospy std_msgs
+   CATKIN_DEPENDS rospy std_msgs cv_bridge
 #  DEPENDS system_lib
 )
 
