@@ -26,8 +26,7 @@ class ZedCamera(object):
 
         # Initialize variables
         self.continuous_capture = False
-        self.rate = rospy.Rate(1)
-        
+
         # Initialize save directory
         self.save_directory = os.path.join(os.getcwd(), "data")
 
@@ -43,6 +42,9 @@ class ZedCamera(object):
 
         # Initialize params
         self.initialize_parameters()
+
+        # Define sleep rate
+        self.rate = rospy.Rate(1)
         
     def handle_joy_message(self, joy_msg):
         # Massive if statement to handle joy mesages
