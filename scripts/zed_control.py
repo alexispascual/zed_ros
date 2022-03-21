@@ -71,6 +71,7 @@ class ZedCamera(object):
             rospy.loginfo(f"Continuous capture: {self.continuous_capture}")
         elif joy_msg.buttons[self.stream_video_button]:
             self.stream_video ^= True
+            rospy.loginfo(f"Video streaming: {self.stream_video}")
             rospy.sleep(1.)
         elif joy_msg.buttons[self.toggle_camera_button]:
             self.toggle_camera()
@@ -122,9 +123,8 @@ class ZedCamera(object):
     def publish_video(self):
         # Capture and save image
         image = sl.Mat()
-        runtime_parameters = sl.RuntimeParameters()
         
-        if self.zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:   
+        if self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:   
             # Get image and time stamp
             self.zed.retrieve_image(image, sl.VIEW.LEFT)
             
@@ -232,7 +232,7 @@ class ZedCamera(object):
                 rospy.loginfo("Capturing depth map/image pair...")
                 self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np)
 
-            if self.stream_video:
+            if self.stream_video and not self.capture_depth_map and not self.continuous_capture:
                 if not self.zed:
                     rospy.loginfo("Video stream error: Initialize Camera First!")
                 else:
