@@ -114,8 +114,7 @@ class ZedCamera(object):
 
     def publish_image_message(self, image_data):
         # Create Image message
-        rospy.loginfo(f"{image_data.shape}")
-        image_message = np.frombuffer(image_data, dtype=np.uint8).reshape(image_data.shape(0), image_data.shape(1), -1)
+        image_message = self.bridge.cv2_to_imgmsg(image_data, "bgra8")
 
         # Publish image
         self.image_publisher.publish(image_message)
