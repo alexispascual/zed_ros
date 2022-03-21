@@ -125,11 +125,11 @@ class ZedCamera(object):
         
         # Save depth map
         file_name = f"depth_map_{timestamp.get_seconds()}.npy"
-        np.save(file_name, depth_data)
+        np.save(os.path.join(directory, file_name), depth_data)
 
         # Save depth map
         file_name = f"point_cloud_{timestamp.get_seconds()}.npy"
-        np.save(file_name, point_cloud_data)
+        np.save(os.path.join(directory, file_name), point_cloud_data)
         
         rospy.loginfo("Data saved!")
         
