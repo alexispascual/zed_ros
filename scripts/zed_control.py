@@ -6,8 +6,9 @@ import cv2
 import pyzed.sl as sl
 import numpy as np
 
-from sensor_msgs.msg import Joy, Image
-from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import Joy
+from rospy.numpy_msg import numpy_msg
+from rospy_tutorials.msg import Floats
 
 class ZedCamera(object):
     """docstring for ZedCamera"""
@@ -44,7 +45,7 @@ class ZedCamera(object):
         rospy.Subscriber('/joy_teleop/joy', Joy, self.handle_joy_message, queue_size=3, buff_size=2**16)
 
         # Initialize stream publisher
-        self.image_publisher = rospy.Publisher('/zed_left_camera', Image, queue_size=10)
+        self.image_publisher = rospy.Publisher('/zed_left_camera', numpy_msg(Floats), queue_size=10)
 
         # Initialize params
         self.initialize_parameters()
@@ -117,11 +118,9 @@ class ZedCamera(object):
                 self.toggle_camera()
 
     def publish_image_message(self, image_data):
-        # Create Image message
-        image_message = self.bridge.cv2_to_imgmsg(image_data, "bgra8")
 
         # Publish image
-        self.image_publisher.publish(image_message)
+        self.image_publisher.publish(image_data)
 
     def publish_video(self):
         # Capture and save image
