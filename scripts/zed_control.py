@@ -6,10 +6,8 @@ import cv2
 import pyzed.sl as sl
 import numpy as np
 
-from sensor_msgs.msg import Joy
-from rospy.numpy_msg import numpy_msg
-from std_msgs.msg import UInt8MultiArray
-from rospy_tutorials.msg import Floats
+from sensor_msgs.msg import Joy, Image
+from cv_bridge import CvBridge, CvBridgeError
 
 class ZedCamera(object):
     """docstring for ZedCamera"""
@@ -46,14 +44,17 @@ class ZedCamera(object):
         rospy.Subscriber('/joy_teleop/joy', Joy, self.handle_joy_message, queue_size=3, buff_size=2**16)
 
         # Initialize stream publisher
-        self.image_publisher = rospy.Publisher('/zed_left_camera', UInt8MultiArray, queue_size=10)
+        self.image_publisher = rospy.Publisher('/zed_left_camera', Image, queue_size=10)
 
         # Initialize params
         self.initialize_parameters()
 
         # Define sleep rate
         self.rate = rospy.Rate(10)
-
+        
+        # Initialize CvBridge
+        self.bridge = CvBridge()
+        
     def handle_joy_message(self, joy_msg):
         # Massive if statement to handle joy mesages
         if joy_msg.buttons[self.capture_depth_map_button]:
@@ -119,12 +120,12 @@ class ZedCamera(object):
     def publish_image_message(self, image_data):
 
         # Publish image
-        # image = image_data.flatten().astype(np.uint8)
-
-        img_msg = UInt8MultiArray()
-        image_data = tuple(map(tuple, image_data))
-        img_msg.data = image_data
-
+        image_data = cv2.resize(data, (0,0), fy=0.5, fx=0.5) 
+        
+        # Transform image to message
+        img_msg = self.bridge.cv2_to_imgmsg(image_data, "bgra8")
+        
+        # Publish image
         self.image_publisher.publish(img_msg)
 
     def publish_video(self):
