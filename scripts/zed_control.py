@@ -188,6 +188,7 @@ class ZedCamera(object):
     def toggle_continuous_capture(self):
         self.continuous_capture ^= True
         rospy.loginfo(f"Continuous capture: {self.continuous_capture}")
+        rospy.sleep(1.)
 
     def start(self):
         # Keeps python from exiting until node is stopped
