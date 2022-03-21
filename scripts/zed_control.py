@@ -116,7 +116,7 @@ class ZedCamera(object):
 
     def save_data(self, image_data, depth_data, point_cloud_data, timestamp):
         # Create folder for depth map/image pair
-        directory = os.path.join(self.save_directory, timestamp)
+        directory = os.path.join(self.save_directory, f"{timestamp}")
         os.path.makedirs(directory)
         
         # Save Image
