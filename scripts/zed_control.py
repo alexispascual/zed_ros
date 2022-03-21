@@ -15,10 +15,10 @@ class ZedCamera(object):
         super(ZedCamera, self).__init__()
 
         # Initialize button mapping
-        self.capture_depth_map_button = 6
-        self.capture_depth_video_button = 7
-        self.stream_video_button = 8
-        self.toggle_camera_button = 9
+        self.capture_depth_map_button = 6 # LT
+        self.capture_depth_video_button = 7 # RT
+        self.stream_video_button = 8 # Back
+        self.toggle_camera_button = 9 # Start
 
         # Initialize zed object
         self.zed = None
@@ -187,6 +187,7 @@ class ZedCamera(object):
 
     def toggle_continuous_capture(self):
         self.continuous_capture ^= True
+        rospy.loginfo(f"Continuous capture: {self.continuous_capture}")
 
     def start(self):
         # Keeps python from exiting until node is stopped
