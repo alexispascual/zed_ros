@@ -6,7 +6,6 @@ import cv2
 import pyzed.sl as sl
 import numpy as np
 
-from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Joy, Image
 
 class ZedCamera(object):
@@ -51,9 +50,6 @@ class ZedCamera(object):
 
         # Define sleep rate
         self.rate = rospy.Rate(10)
-
-        # Initialize CvBridge
-        self.bridge = CvBridge()
         
     def handle_joy_message(self, joy_msg):
         # Massive if statement to handle joy mesages
@@ -118,7 +114,7 @@ class ZedCamera(object):
 
     def publish_image_message(self, image_data):
         # Create Image message
-        image_message = self.bridge.cv2_to_imgmsg(image_data, "bgra8")
+        image_message = np.frombuffer(image_data, dtype=np.uint8).reshape(image_data.height, image_data.width, -1)
 
         # Publish image
         self.image_publisher.publish(image_message)
@@ -226,7 +222,7 @@ class ZedCamera(object):
 
             if self.capture_depth_map:
                 if not self.zed:
-                    rospy.loginfo("Initialize Camera First!")
+                    rospy.loginfo("Capture depth map error: Initialize Camera First!")
                 else:
                     rospy.loginfo("Capturing depth map/image pair...")
                     self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np)
@@ -238,7 +234,7 @@ class ZedCamera(object):
 
             if self.stream_video:
                 if not self.zed:
-                    rospy.loginfo("Initialize Camera First!")
+                    rospy.loginfo("Video stream error: Initialize Camera First!")
                 else:
                     self.publish_video()
                 
