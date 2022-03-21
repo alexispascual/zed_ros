@@ -67,7 +67,7 @@ class ZedCamera(object):
             tr_np = mirror_ref.m
             
             if self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
-                rospy.loginfo("Grabbed runtime params...")
+                rospy.loginfo("Succesfully grabbed frame!")
                 
                 # Take image and matching depth map
                 rospy.loginfo("Got image!")
@@ -117,7 +117,7 @@ class ZedCamera(object):
     def save_data(self, image_data, depth_data, point_cloud_data, timestamp):
         # Create folder for depth map/image pair
         directory = os.path.join(self.save_directory, f"{timestamp}")
-        os.path.makedirs(directory)
+        os.makedirs(directory)
         
         # Save Image
         file_name = f"zed_image_left_{timestamp}.jpg"
