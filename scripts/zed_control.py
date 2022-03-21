@@ -23,6 +23,9 @@ class ZedCamera(object):
         # Initialize zed object
         self.zed = None
         self.init_params = None
+
+        # Initialize variables
+        self.continuous_capture = False
         
         # Initialize save directory
         self.save_directory = os.path.join(os.getcwd(), "data")
@@ -44,7 +47,8 @@ class ZedCamera(object):
         # Massive if statement to handle joy mesages
         if joy_msg.buttons[self.capture_depth_map_button]:
             self.capture_depth_map()
-
+        elif joy_msg.buttons[self.capture_depth_video_button]:
+            self.toggle_continuous_capture()
         elif joy_msg.buttons[self.toggle_camera_button]:
             self.toggle_camera()
             
@@ -66,7 +70,7 @@ class ZedCamera(object):
             mirror_ref.set_translation(sl.Translation(2.75,4.0,0))
             tr_np = mirror_ref.m
             
-            if self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
+            while self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
                 rospy.loginfo("Succesfully grabbed frame!")
                 
                 # Take image and matching depth map
@@ -93,6 +97,9 @@ class ZedCamera(object):
                 # Save data
                 rospy.loginfo("Saving data...")
                 self.save_data(image_data, depth_data, point_cloud_data, timestamp)
+
+                if not self.continuous_capture:
+                    break
                 
             self.toggle_camera()
             
@@ -177,6 +184,9 @@ class ZedCamera(object):
         self.runtime_parameters.textureness_confidence_threshold = 100
 
         rospy.loginfo("InitParams and RuntimeParams set!")
+
+    def toggle_continuous_capture(self):
+        self.continuous_capture ^= True
 
     def start(self):
         # Keeps python from exiting until node is stopped
