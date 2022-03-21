@@ -118,7 +118,7 @@ class ZedCamera(object):
     def publish_image_message(self, image_data):
 
         # Publish image
-        image = np.ndarray(image_data, dtype=np.uint8)
+        image = np.reshape(image_data, image_data.shape, dtype=np.uint8)
         self.image_publisher.publish(image)
 
     def publish_video(self):
