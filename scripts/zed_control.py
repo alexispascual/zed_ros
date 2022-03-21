@@ -92,7 +92,7 @@ class ZedCamera(object):
 
                 # Save data
                 rospy.loginfo("Saving data...")
-                self.save_data(self, image_data, depth_data, point_cloud_data, timestamp)
+                self.save_data(image_data, depth_data, point_cloud_data, timestamp)
                 
             self.toggle_camera()
             
