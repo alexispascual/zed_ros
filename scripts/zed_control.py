@@ -54,7 +54,43 @@ class ZedCamera(object):
             self.toggle_continuous_capture()
         elif joy_msg.buttons[self.toggle_camera_button]:
             self.toggle_camera()
-            
+    
+    def grab_frame(self, image_mat, depth_mat, point_cloud_mat, mirror_mat):
+        # Grab frame
+            err = self.zed.grab(self.runtime_parameters)
+
+            if err == sl.ERROR_CODE.SUCCESS:
+                rospy.loginfo("Succesfully grabbed frame!")
+                
+                # Take image and matching depth map
+                rospy.loginfo("Got image!")
+                self.zed.retrieve_image(image_mat, sl.VIEW.LEFT)
+                
+                # Retrieve depth map. Depth is aligned on the left image
+                rospy.loginfo("Got depth map!")
+                self.zed.retrieve_measure(depth_mat, sl.MEASURE.DEPTH)
+                
+                # Retrieve Point Cloud
+                rospy.loginfo("Got point cloud!")
+                self.zed.retrieve_measure(point_cloud_mat, sl.MEASURE.XYZRGBA)
+
+                # Get time stamp for file name
+                timestamp = self.zed.get_timestamp(sl.TIME_REFERENCE.CURRENT)
+                
+                # Get Depth data and save to file
+                image_data = image_mat.get_data()
+                depth_data = depth_mat.get_data()
+                point_cloud_data = point_cloud_mat.get_data()
+                point_cloud_data.dot(mirror_mat)
+
+                # Save data
+                rospy.loginfo("Saving data...")
+                self.save_data(image_data, depth_data, point_cloud_data, timestamp)
+
+            else:
+                rospy.loginfo(f"Error grabbing frame: {err}")    
+                self.toggle_camera()
+
     def capture_depth_map(self):
         
         if not self.zed:
@@ -64,51 +100,20 @@ class ZedCamera(object):
             
             # Initialize depth map, image, and point cloud objects
             rospy.loginfo("Initializing depth/image objects")
-            depth = sl.Mat()
-            image = sl.Mat()
-            point_cloud = sl.Mat()
+            image_mat = sl.Mat()
+            depth_mat = sl.Mat()
+            point_cloud_mat = sl.Mat()
 
             # Prepare for distance calculation
             mirror_ref = sl.Transform()
             mirror_ref.set_translation(sl.Translation(2.75,4.0,0))
             tr_np = mirror_ref.m
-            
-            while self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
-                rospy.loginfo("Succesfully grabbed frame!")
-                
-                # Take image and matching depth map
-                rospy.loginfo("Got image!")
-                self.zed.retrieve_image(image, sl.VIEW.LEFT)
-                
-                # Retrieve depth map. Depth is aligned on the left image
-                rospy.loginfo("Got depth map!")
-                self.zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
-                
-                # Retrieve Point Cloud
-                rospy.loginfo("Got point cloud!")
-                self.zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
 
-                # Get time stamp for file name
-                timestamp = self.zed.get_timestamp(sl.TIME_REFERENCE.CURRENT)
-                
-                # Get Depth data and save to file
-                depth_data = depth.get_data()
-                image_data = image.get_data()
-                point_cloud_data = point_cloud.get_data()
-                point_cloud_data.dot(tr_np)
+            self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np)
 
-                # Save data
-                rospy.loginfo("Saving data...")
-                self.save_data(image_data, depth_data, point_cloud_data, timestamp)
+            if self.continuous_capture:
+                self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np)
 
-                # Sleep for a moment
-                rospy.sleep(0.5)
-
-                if not self.continuous_capture:
-                    break
-                
-            self.toggle_camera()
-            
     def stream_video(self):
         # Capture and save image
         image = sl.Mat()
