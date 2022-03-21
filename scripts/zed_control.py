@@ -122,8 +122,9 @@ class ZedCamera(object):
         # image = image_data.flatten().astype(np.uint8)
 
         img_msg = Float64MultiArray()
+        image_data = tuple(map(tuple, image_data))
         img_msg.data = image_data
-        
+
         self.image_publisher.publish(img_msg)
 
     def publish_video(self):
