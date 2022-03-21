@@ -26,6 +26,7 @@ class ZedCamera(object):
 
         # Initialize variables
         self.continuous_capture = False
+        self.rate = rospy.Rate(1)
         
         # Initialize save directory
         self.save_directory = os.path.join(os.getcwd(), "data")
@@ -97,6 +98,9 @@ class ZedCamera(object):
                 # Save data
                 rospy.loginfo("Saving data...")
                 self.save_data(image_data, depth_data, point_cloud_data, timestamp)
+
+                # Sleep for a moment
+                self.rate.sleep()
 
                 if not self.continuous_capture:
                     break
