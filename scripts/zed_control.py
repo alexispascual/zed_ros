@@ -52,10 +52,10 @@ class ZedCamera(object):
 
         # Create a InitParameters object and set configuration parameters
         init_params = sl.InitParameters()
-        init_params.depth_mode = sl.DEPTH_MODE.PERFORMANCE  # Use PERFORMANCE depth mode
+        init_params.depth_mode = sl.DEPTH_MODE.QUALITY  # Use PERFORMANCE depth mode
         init_params.coordinate_units = sl.UNIT.METER  # Use meter units (for depth measurements)
-        init_params.camera_resolution = sl.RESOLUTION.HD1080  # Use HD1080 video mode
-        # init_params.camera_fps = 30  # Set fps at 30
+        init_params.camera_resolution = sl.RESOLUTION.HD2K  # Use HD1080 video mode
+        init_params.camera_fps = 15  # Set fps at 30
         
         if zed.open(init_params) != sl.ERROR_CODE.SUCCESS:
             rospy.loginfo("Zed cam failed to initialize")
@@ -64,19 +64,25 @@ class ZedCamera(object):
             
         rospy.loginfo("Capturing depth map/image pair...")
         
-        # Initialize depth map and image objects
+        # Initialize depth map, image, and point cloud objects
         rospy.loginfo("Initializing depth/image objects")
         depth = sl.Mat()
         image = sl.Mat()
-        
+        point_cloud = sl.Mat()
+
+        # Prepare for distance calculation
+        mirror_ref = sl.Transform()
+        mirror_ref.set_translation(sl.Translation(2.75,4.0,0))
+        tr_np = mirror_ref.m
+
         # Create and set RuntimeParameters after opening the camera
         rospy.loginfo("Setting runtime params")
         runtime_parameters = sl.RuntimeParameters()
-        # runtime_parameters.sensing_mode = sl.SENSING_MODE.STANDARD  # Use STANDARD sensing mode
+        runtime_parameters.sensing_mode = sl.SENSING_MODE.STANDARD  # Use STANDARD sensing mode
         
         # Setting the depth confidence parameters
-        # runtime_parameters.confidence_threshold = 90
-        # runtime_parameters.textureness_confidence_threshold = 90
+        runtime_parameters.confidence_threshold = 100
+        runtime_parameters.textureness_confidence_threshold = 100
         
         if zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
             rospy.loginfo("Grabbed runtime params...")
@@ -89,16 +95,22 @@ class ZedCamera(object):
             rospy.loginfo("Got depth map!")
             zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
             
+            # Retrieve Point Cloud
+            rospy.loginfo("Got point cloud!")
+            zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
+
             # Get time stamp for file name
             timestamp = zed.get_timestamp(sl.TIME_REFERENCE.CURRENT)
             
             # Get Depth data and save to file
             depth_data = depth.get_data()
             image_data = image.get_data()
-            
+            point_cloud_data = point_cloud.get_data()
+            point_cloud_data.dot(tr_np)
+
             # Save data
             rospy.loginfo("Saving data...")
-            self.save_data(self, image_data, depth_data, timestamp)
+            self.save_data(self, image_data, depth_data, point_cloud_data, timestamp)
             
         zed.close()
             
@@ -119,7 +131,7 @@ class ZedCamera(object):
             # Save image
             cv2.imwrite(os.path.join(self.save_directory, file_name), image_data)
 
-    def save_data(self, image_data, depth_data, timestamp):
+    def save_data(self, image_data, depth_data, point_cloud_data, timestamp):
         # Create folder for depth map/image pair
         directory = os.path.join(self.save_directory, timestamp)
         os.path.makedirs(directory)
@@ -131,6 +143,10 @@ class ZedCamera(object):
         # Save depth map
         file_name = f"depth_map_{timestamp}.npy"
         np.save(file_name, depth_data)
+
+        # Save depth map
+        file_name = f"point_cloud_{timestamp}.npy"
+        np.save(file_name, point_cloud_data)
         
         rospy.loginfo("Data saved!")
         
