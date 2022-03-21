@@ -52,9 +52,6 @@ class ZedCamera(object):
 
         # Define sleep rate
         self.rate = rospy.Rate(10)
-        
-        # Initialize CvBridge
-        self.bridge = CvBridge()
 
     def handle_joy_message(self, joy_msg):
         # Massive if statement to handle joy mesages
