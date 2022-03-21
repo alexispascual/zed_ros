@@ -8,7 +8,7 @@ import numpy as np
 
 from sensor_msgs.msg import Joy
 from rospy.numpy_msg import numpy_msg
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import UInt8MultiArray
 from rospy_tutorials.msg import Floats
 
 class ZedCamera(object):
