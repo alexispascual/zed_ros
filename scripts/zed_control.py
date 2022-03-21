@@ -116,19 +116,19 @@ class ZedCamera(object):
 
     def save_data(self, image_data, depth_data, point_cloud_data, timestamp):
         # Create folder for depth map/image pair
-        directory = os.path.join(self.save_directory, f"{timestamp.getSeconds()}")
+        directory = os.path.join(self.save_directory, f"{timestamp.get_seconds()}")
         os.makedirs(directory)
         
         # Save Image
-        file_name = f"zed_image_left_{timestamp.getSeconds()}.jpg"
+        file_name = f"zed_image_left_{timestamp.get_seconds()}.jpg"
         cv2.imwrite(os.path.join(directory, file_name), image_data)
         
         # Save depth map
-        file_name = f"depth_map_{timestamp.getSeconds()}.npy"
+        file_name = f"depth_map_{timestamp.get_seconds()}.npy"
         np.save(file_name, depth_data)
 
         # Save depth map
-        file_name = f"point_cloud_{timestamp.getSeconds()}.npy"
+        file_name = f"point_cloud_{timestamp.get_seconds()}.npy"
         np.save(file_name, point_cloud_data)
         
         rospy.loginfo("Data saved!")
