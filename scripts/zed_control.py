@@ -7,6 +7,7 @@ import pyzed.sl as sl
 import numpy as np
 
 from sensor_msgs.msg import Joy, Image
+from cv_bridge import CvBridge, CvBridgeError
 
 class ZedCamera(object):
     """docstring for ZedCamera"""
@@ -51,6 +52,9 @@ class ZedCamera(object):
         # Define sleep rate
         self.rate = rospy.Rate(10)
         
+        # Initialize CvBridge
+        self.bridge = CvBridge()
+
     def handle_joy_message(self, joy_msg):
         # Massive if statement to handle joy mesages
         if joy_msg.buttons[self.capture_depth_map_button]:
