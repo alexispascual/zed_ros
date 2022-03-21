@@ -66,7 +66,7 @@ class ZedCamera(object):
             mirror_ref.set_translation(sl.Translation(2.75,4.0,0))
             tr_np = mirror_ref.m
             
-            if self.zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
+            if self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
                 rospy.loginfo("Grabbed runtime params...")
                 
                 # Take image and matching depth map
@@ -137,7 +137,7 @@ class ZedCamera(object):
         
         # Initialize zed object if it doesn't exist
         # Otherwise, close the camera
-        if not self.zed and not self.init_params:
+        if not self.zed:
             rospy.loginfo("Initializing camera!")
             
             # Create a Camera object
@@ -147,9 +147,7 @@ class ZedCamera(object):
             if err != sl.ERROR_CODE.SUCCESS:
                 rospy.loginfo(f"Zed cam failed to initialize: {err}")
             else:
-                self.zed = zed
-                self.init_params = init_params
-            
+                self.zed = zed            
                 rospy.loginfo("Camera initialized!")
             
         else:
@@ -157,7 +155,6 @@ class ZedCamera(object):
             
             self.zed.close()
             self.zed = None
-            self.init_params = None
             
             rospy.loginfo("Camera closed!")
 
