@@ -120,7 +120,7 @@ class ZedCamera(object):
     def publish_image_message(self, image_data):
 
         # Publish image
-        image_data = cv2.resize(data, None, fy=0.5, fx=0.5) 
+        image_data = cv2.resize(image_data, None, fy=0.5, fx=0.5) 
         
         # Transform image to message
         img_msg = self.bridge.cv2_to_imgmsg(image_data, "bgra8")
