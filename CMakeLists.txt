@@ -10,7 +10,7 @@ project(zed_ros)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
-  rospy_tutorials
+  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions
@@ -105,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES zed_ros
-   CATKIN_DEPENDS rospy std_msgs rospy_tutorials
+   CATKIN_DEPENDS rospy std_msgs cv_bridge
 #  DEPENDS system_lib
 )
 
@@ -161,6 +161,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
  catkin_install_python(PROGRAMS
    scripts/zed_control.py
+   scripts/video_stream_subscriber.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 
