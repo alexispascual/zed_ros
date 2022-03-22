@@ -78,49 +78,59 @@ class ZedCamera(object):
         elif joy_msg.buttons[self.toggle_camera_button]:
             self.toggle_camera()
     
-    def grab_frame(self, image_mat, depth_mat, point_cloud_mat, mirror_mat):
+    def grab_frame(self, 
+                   image_mat, 
+                   depth_mat, 
+                   point_cloud_mat, 
+                   mirror_mat, 
+                   sensors_data):
+
         # Grab frame
-            err = self.zed.grab(self.runtime_parameters)
+        err = self.zed.grab(self.runtime_parameters)
 
-            if err == sl.ERROR_CODE.SUCCESS:
-                rospy.loginfo("Succesfully grabbed frame!")
-                
-                # Take image and matching depth map
-                rospy.loginfo("Got image!")
-                self.zed.retrieve_image(image_mat, sl.VIEW.LEFT)
-                
-                # Retrieve depth map. Depth is aligned on the left image
-                rospy.loginfo("Got depth map!")
-                self.zed.retrieve_measure(depth_mat, sl.MEASURE.DEPTH)
-                
-                # Retrieve Point Cloud
-                rospy.loginfo("Got point cloud!")
-                self.zed.retrieve_measure(point_cloud_mat, sl.MEASURE.XYZRGBA)
+        if err == sl.ERROR_CODE.SUCCESS:
+            rospy.loginfo("Succesfully grabbed frame!")
+            
+            # Take image and matching depth map
+            rospy.loginfo("Got image!")
+            self.zed.retrieve_image(image_mat, sl.VIEW.LEFT)
+            
+            # Retrieve depth map. Depth is aligned on the left image
+            rospy.loginfo("Got depth map!")
+            self.zed.retrieve_measure(depth_mat, sl.MEASURE.DEPTH)
+            
+            # Retrieve Point Cloud
+            rospy.loginfo("Got point cloud!")
+            self.zed.retrieve_measure(point_cloud_mat, sl.MEASURE.XYZRGBA)
 
-                # Get time stamp for file name
-                timestamp = self.zed.get_timestamp(sl.TIME_REFERENCE.CURRENT)
-                
-                # Get Depth data and save to file
-                image_data = image_mat.get_data()
-                depth_data = depth_mat.get_data()
-                point_cloud_data = point_cloud_mat.get_data()
-                point_cloud_data.dot(mirror_mat)
+            # Get Sensor Data
+            rospy.loginfo("Got sensor data!")
+            self.zed.get_sensors_data(sensors_data, sl.TIME_REFERENCE.CURRENT)
 
-                if self.stream_video:
-                    self.publish_image_message(image_data)
+            # Get time stamp for file name
+            timestamp = self.zed.get_timestamp(sl.TIME_REFERENCE.CURRENT)
+            
+            # Get Depth data and save to file
+            image_data = image_mat.get_data()
+            depth_data = depth_mat.get_data()
+            point_cloud_data = point_cloud_mat.get_data()
+            point_cloud_data.dot(mirror_mat)
 
-                # Save data
-                rospy.loginfo("Saving data...")
-                self.save_data(image_data, depth_data, point_cloud_data, timestamp)
+            if self.stream_video:
+                self.publish_image_message(image_data)
 
-            else:
-                rospy.loginfo(f"Error grabbing frame: {err}")    
-                self.toggle_camera()
+            # Save data
+            rospy.loginfo("Saving data...")
+            self.save_data(image_data, depth_data, point_cloud_data, sensors_data, timestamp)
+
+        else:
+            rospy.loginfo(f"Error grabbing frame: {err}")    
+            self.toggle_camera()
 
     def publish_image_message(self, image_data):
 
         # Publish image
-        image_data = cv2.resize(image_data, None, fy=0.5, fx=0.5) 
+        image_data = cv2.resize(image_data, None, fy=0.3, fx=0.3) 
         
         # Transform image to message
         img_msg = self.bridge.cv2_to_imgmsg(image_data, "bgra8")
@@ -158,7 +168,16 @@ class ZedCamera(object):
         # Save depth map
         file_name = f"point_cloud_{timestamp.get_milliseconds()}.npy"
         np.save(os.path.join(directory, file_name), point_cloud_data)
-        
+
+        # Save sensors data
+        file_name = f"sensors_{timestamp.get_milliseconds()}.txt"
+        quaternion = sensors_data.get_imu_data().get_pose().get_orientation().get()
+        linear_acceleration = sensors_data.get_imu_data().get_linear_acceleration()
+        angular_velocity = sensors_data.get_imu_data().get_angular_velocity()
+
+        with open (os.path.join(directory, file_name), 'w') as f:
+            f.write(f"{quaternion}, {linear_acceleration}, {angular_velocity}")
+
         rospy.loginfo("Data saved!")
         
     def toggle_camera(self):
@@ -220,6 +239,7 @@ class ZedCamera(object):
         image_mat = sl.Mat()
         depth_mat = sl.Mat()
         point_cloud_mat = sl.Mat()
+        sensors_data = sl.SensorsData()
 
         # Prepare for distance calculation
         mirror_ref = sl.Transform()
@@ -233,7 +253,7 @@ class ZedCamera(object):
                     rospy.loginfo("Capture depth map error: Initialize Camera First!")
                 else:
                     rospy.loginfo("Capturing depth map/image pair...")
-                    self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np)
+                    self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np, sensors_data)
                     self.capture_depth_map = False
 
             elif self.continuous_capture:
