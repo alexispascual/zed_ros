@@ -152,7 +152,7 @@ class ZedCamera(object):
             # Publish image data
             self.publish_image_message(image_data)
 
-    def save_data(self, image_data, depth_data, point_cloud_data, timestamp):
+    def save_data(self, image_data, depth_data, point_cloud_data, sensors_data, timestamp):
         # Create folder for depth map/image pair
         directory = os.path.join(self.save_directory, f"{timestamp.get_milliseconds()}")
         os.makedirs(directory)
@@ -258,7 +258,7 @@ class ZedCamera(object):
 
             elif self.continuous_capture:
                 rospy.loginfo("Capturing depth map/image pair...")
-                self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np)
+                self.grab_frame(image_mat, depth_mat, point_cloud_mat, tr_np, sensors_data)
 
             if self.stream_video and not self.capture_depth_map and not self.continuous_capture:
                 if not self.zed:
